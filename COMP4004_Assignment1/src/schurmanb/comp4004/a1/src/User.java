@@ -1,6 +1,5 @@
 package schurmanb.comp4004.a1.src;
 
-import java.util.ArrayList;
 
 public class User
 {

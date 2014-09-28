@@ -1,6 +1,6 @@
 package schurmanb.comp4004.a1.src;
 
-public class Title
+public class Title implements Comparable<Title>
 {
 	String title;	// title of book 
 	String author;	// author of book
@@ -40,5 +40,10 @@ public class Title
 	public String toString(){
 		return title+" by "+author+". isbn#"+isbn+". Added by Librarian#"+lID;
 				
+	}
+	
+	@Override
+	public int compareTo( Title other ){
+		return this.getISBN().compareTo(other.getISBN());
 	}
 }

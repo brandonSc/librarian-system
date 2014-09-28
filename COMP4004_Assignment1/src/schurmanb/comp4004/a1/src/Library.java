@@ -1,6 +1,9 @@
 package schurmanb.comp4004.a1.src;
 
 import java.sql.*;
+import java.util.ArrayList;
+
+import org.joda.time.LocalDate;
 
 public class Library
 {
@@ -28,80 +31,101 @@ public class Library
 			db = DriverManager.getConnection("jdbc:sqlite:LIB.db");
 			db.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 			db.setAutoCommit(false);
-			
-			// create user table
-			Statement stmnt = db.createStatement();
-			String sql = "create table if not exists users("
-					+ "uID integer primary key autoincrement,"
-					+ "fName text not null,"
-					+ "lName text not null,"
-					+ "unique(fName, lName));";
-			stmnt.executeUpdate(sql);
-			stmnt.close();
-			db.commit();
-			
-			// create librarians table
-			stmnt = db.createStatement();
-			sql = "create table if not exists librarians("
-					+ "lID integer primary key autoincrement,"
-					+ "uID integer not null,"
-					+ "foreign key(uID) references users(uID));";
-			stmnt.executeUpdate(sql);
-			stmnt.close();
-			db.commit();
-			
-			// create titles table
-			stmnt = db.createStatement();
-			sql = "create table if not exists titles("
-					+ "isbn integer primary key,"
-					+ "title text not null,"
-					+ "author text not null,"
-					+ "lID integer not null,"
-					+ "foreign key(lID) references librarians(lID)"
-					+ "unique(title, author) on conflict ignore);";
-			stmnt.executeUpdate(sql);
-			stmnt.close();
-			db.commit();
-			
-			// create items table
-			stmnt = db.createStatement();
-			sql = "create table if not exists items("
-					+ "iID integer primary key autoincrement,"
-					+ "isbn integer not null,"
-					+ "copyNum integer not null,"
-					+ "lID integer not null,"
-					+ "foreign key(isbn) references titles(isbn),"
-					+ "foreign key(lID) references librarians(lID));";
-			stmnt.executeUpdate(sql);
-			stmnt.close();
-			db.commit();
-			
-			// create loans table
-			stmnt = db.createStatement();
-			sql = "create table if not exists loans("
-					+ "iID integer primary key,"
-					+ "uID integer not null,"
-					+ "startData data not null,"
-					+ "dueDate data not null,"
-					+ "foreign key(iID) references items(iID),"
-					+ "foreign key(uID) references users(uID));";
-			stmnt.executeUpdate(sql);
-			stmnt.close();
-			db.commit();
-		} catch( Exception e ){
+		} catch( SQLException e ){
 			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			return;
+		}
+		// create database tables
+		createTables();
+	}
+	
+	public Loan renewLoan( Loan loan, User user, int numDays ){
+		Loan newLoan = new Loan(user,loan.getItem(),new LocalDate(),new LocalDate().plusDays(numDays));
+		try {
+			Statement stmnt = db.createStatement();
+			String sql = "update loans set dueDate="+newLoan.getDueDate()+" where iID="+loan.getItem().getItemID()+";";
+			stmnt.executeUpdate(sql);
+			stmnt.close();
+			db.commit();
+		} catch( SQLException e ){
+			e.printStackTrace();
+			return null;
+		}
+		return newLoan;
+	}
+	
+	/**
+	 * Remove an overdue Loan from the user
+	 * @param user with overdue loan
+	 * @param item that is overdue
+	 * @throws TitleNotFoundException
+	 * @throws ItemNotFoundException
+	 */
+	public void collectFine( User user, Item item ) throws TitleNotFoundException, ItemNotFoundException {
+		// double check the item exists
+		if( findItem(item.getItemID()) != null ){
+			try {
+				// some stuff with money should be done here, realistically.
+				Statement stmnt = db.createStatement();
+				String sql = "delete from loans where iID="+item.getItemID()+";";
+				stmnt.executeUpdate(sql);
+				stmnt.close();
+				db.commit();
+			} catch( SQLException e ){
+				e.printStackTrace();
+			}
 		}
 	}
 	
 	/**
-	 * 
+	 * return a loaned item
+	 * @param user
+	 * @param item
+	 * @throws ItemNotFoundException  
+	 * @throws TitleNotFoundException 
+	 */
+	public void returnLoancopy( User user, Item item ) throws TitleNotFoundException, ItemNotFoundException {
+		// double check the item exists
+		if( findItem(item.getItemID()) != null ){
+			try {
+				// some stuff with money should be done here, realistically.
+				Statement stmnt = db.createStatement();
+				String sql = "delete from loans where iID="+item.getItemID()+";";
+				stmnt.executeUpdate(sql);
+				stmnt.close();
+				db.commit();
+			} catch( SQLException e ){
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * allows a User to borrow an Item, 
+	 * if the borrower does not have more than 10 loans,
+	 * if they do not have an overdue loan.
 	 * @param borrower the User that is borrowing the Item
 	 * @param item the Item the User wishes to borrow
-	 * @return true on successful loan, false if there was a problem (ie outstanding fines)
+	 * @return new Loan object containing start and due dates
 	 * @throws TitleNotFoundException  
 	 */
-	public boolean borrowLoancopy( Item item, User borrower ) throws TitleNotFoundException {
-		Title t = findTitle(item.getReferencingTitle().getISBN()); // check Title exists first
+	public Loan borrowLoancopy( Item item, User borrower, LocalDate dueDate ) throws TitleNotFoundException, CannotLoanException {
+		Loan loan = null;
+		// check Title exists first
+		Title t = findTitle(item.getReferencingTitle().getISBN());
+		// check user is able to borrower book (ie they have less than 10 loans and none are overdue)
+		ArrayList<Loan> loans = getAllLoans(borrower);
+		if( loans.size() >= 10 ){
+			throw new CannotLoanException(borrower+" cannot borrow more than 10 Items.");
+		} else {
+			for( Loan l : loans ){
+				if( l.isOverDue() ){
+					throw new CannotLoanException(borrower+" has an overdue Item. Please collect this fine first.");
+				}
+			}
+		}
 		if( t != null ){
 			// check if the copy is available for loan
 			try {
@@ -115,17 +139,102 @@ public class Library
 				db.commit();
 				if( count == 0 ){
 					// the Item is not currently on loan, OK to loan to borrower
+					LocalDate curDate = new LocalDate();
 					stmnt = db.createStatement();
-					sql = "insert into loans(iID, uID) values("
-							+ item.getItemID()+", "+borrower.getUserID()+");";
-					return true;
+					sql = "insert into loans(iID, uID, startDate, dueDate) values("
+							+ item.getItemID()+","+borrower.getUserID()+",'"+curDate+"','"+dueDate+"');";
+					loan = new Loan(borrower,item,curDate,dueDate);
+					stmnt.executeUpdate(sql);
+					stmnt.close();
+					db.commit();
+				} else {
+					throw new CannotLoanException("The Item with ID#"+item.getItemID()+" is currently being loaned.");
 				}
 			} catch( SQLException e ){
 				e.printStackTrace();
-				return false;
 			}
 		} else {
-			return false;
+			throw new TitleNotFoundException("corresponding Title was not found");
+		}
+		return loan;
+	}
+	
+	/**
+	 * gets all Loans a User currently owes
+	 * @param user User to query
+	 * @return an ArrayList of loans containing start and due dates
+	 * @throws TitleNotFoundException  
+	 */
+	public ArrayList<Loan> getAllLoans( User user ){
+		ArrayList<Loan> loans = new ArrayList<Loan>();
+		try {
+			Statement stmnt = db.createStatement();
+			String sql = "select * from loans where uID="+user.getUserID()+";";
+			ResultSet rs = stmnt.executeQuery(sql);
+			while( rs.next() ){
+				LocalDate startDate = LocalDate.parse(rs.getString("startDate"));
+				LocalDate dueDate = LocalDate.parse(rs.getString("dueDate"));
+				int iID = rs.getInt("iID");
+				Item item;
+				try {
+					item = findItem(iID);
+				} catch( TitleNotFoundException | ItemNotFoundException e ){
+					e.printStackTrace();
+					return null;
+				}
+				loans.add(new Loan(user,item,startDate,dueDate));
+			}
+			rs.close();
+			stmnt.close();
+			db.commit();
+		} catch( SQLException e ){
+			e.printStackTrace();
+		}
+		return loans;
+	}
+	
+	/**
+	 * get all items in loans database table
+	 * @return arraylist of items
+	 */ 
+	private ArrayList<Item> getLoanedItems(){
+		ArrayList<Item> items = new ArrayList<Item>();
+		try {
+			Statement stmnt = db.createStatement();
+			String sql = "select * from loans;";
+			ResultSet rs = stmnt.executeQuery(sql);
+			while( rs.next() ){
+				int iID = rs.getInt("iID");
+				Item item;
+				try {
+					item = findItem(iID);
+				} catch( TitleNotFoundException | ItemNotFoundException e ){
+					e.printStackTrace();
+					return null;
+				}
+				if( item != null ){
+					items.add(item);
+				}
+			}
+			rs.close();
+			stmnt.close();
+			db.commit();
+		} catch( SQLException e ){
+			e.printStackTrace();
+		}
+		return items;
+	}
+	
+	/**
+	 * checks if a user has an overdue loan. 
+	 * a user cannot borrow another book if they have an overdue loan
+	 */
+	public boolean hasOverdueLoan( User user ){
+		ArrayList<Loan> loans = getAllLoans(user);
+		for( Loan l : loans ){
+			if( l.isOverDue() ){
+				return true;
+			}
 		}
 		return false;
 	}
@@ -148,31 +257,75 @@ public class Library
 		}
 	}
 	
-
 	/**
-	 * finds a copy of an Item with corresponding isbn. 
-	 * The copy returned will be the most recent one added.
-	 * @param isbn
-	 * @return new Item object
-	 * @throws TitleNotFoundException  
+	 * get all items in database items table
+	 * @return new arraylist 
 	 */
-	public Item findItem( int isbn ) throws TitleNotFoundException {
-		Item item = null;
-		Title t = findTitle(isbn);
+	public ArrayList<Item> getAllItems(){
+		ArrayList<Item> items = new ArrayList<Item>();
 		try {
 			Statement stmnt = db.createStatement();
-			String sql = "select count(*) from items where isbn="+isbn+";";
+			String sql = "select * from items;";
 			ResultSet rs = stmnt.executeQuery(sql);
-			rs.next();
-			int copyNum = rs.getInt(1);
+			while( rs.next() ){
+				int iID = rs.getInt("iID");
+				int isbn = rs.getInt("isbn");
+				Title t = null;
+				try {
+					t = findTitle(isbn);
+				} catch( TitleNotFoundException e ){
+					e.printStackTrace();
+				}
+				items.add(new Item(iID, t));
+			}
 			rs.close();
 			stmnt.close();
 			db.commit();
-			stmnt = db.createStatement();
-			sql = "select * from items where isbn="+isbn+" and copyNum="+copyNum+";";
-			rs = stmnt.executeQuery(sql);
+		} catch( SQLException e ){
+			e.printStackTrace();
+		}
+		return items;
+	}
+	
+
+	/**
+	 * finds some arbitrary copy of an Item with corresponding isbn
+	 * such that the Item is not currently being Loaned to a User. 
+	 * @param isbn
+	 * @return new Item object, or null if there are no copies left
+	 * @throws TitleNotFoundException  
+	 * @throws ItemNotFoundException 
+	 */
+	public Item findSomeItem( int isbn ) throws ItemNotFoundException {
+		ArrayList<Item> items = getAllItems();
+		ArrayList<Item> loaned = getLoanedItems();
+		for( Item i : items ){
+			if( !loaned.contains(i) ){
+				return i;
+			}
+		}
+		throw new ItemNotFoundException("All Items for isbn#"+isbn+" are currently being loaned.");
+	}
+	
+	/**
+	 * Find the Item object corresponding to the item ID 
+	 * @param iID item ID#
+	 * @return new Item object
+	 * @throws TitleNotFoundException
+	 * @throws ItemNotFoundException
+	 */
+	public Item findItem( int iID ) throws TitleNotFoundException, ItemNotFoundException {
+		Item item = null;
+		try {
+			Statement stmnt = db.createStatement();
+			String sql = "select * from items where iID="+iID+";";
+			ResultSet rs = stmnt.executeQuery(sql);
 			if( rs.next() ){
-				item = new Item(copyNum, t);
+				int isbn = rs.getInt("isbn");
+				Title t = findTitle(isbn);
+				item = new Item(iID, t);
+			} else {
+				throw new ItemNotFoundException("The Item with ID#"+iID+" was not found");
 			}
 			rs.close();
 			stmnt.close();
@@ -267,6 +420,29 @@ public class Library
 	}
 	
 	/**
+	 * get all titles in database
+	 * @return new ArrayList of Titles
+	 */
+	public ArrayList<Title> getAllTitles(){
+		ArrayList<Title> titles = new ArrayList<Title>();
+		try { 
+			Statement stmnt = db.createStatement();
+			String sql = "select * from titles;";
+			ResultSet rs = stmnt.executeQuery(sql);
+			while( rs.next() ){
+				int isbn = rs.getInt("isbn");
+				String title = rs.getString("title");
+				String author = rs.getString("author");
+				titles.add(new Title(title,author,isbn));
+			}
+		} catch( SQLException e ){
+			e.printStackTrace();
+			return null;
+		}
+		return titles;
+	}
+	
+	/**
 	 * find a Title by name
 	 * @param title of book
 	 * @param author of book
@@ -326,6 +502,12 @@ public class Library
 		return t;
 	}
 	
+	/**
+	 * removes a Title from the database using name and author of book
+	 * @param title name of book 
+	 * @param author author of book
+	 * @throws TitleNotFoundException
+	 */
 	public void removeTile( String title, String author ) throws TitleNotFoundException {
 		Title t = findTitle(title,author);
 		if( t != null ){
@@ -343,6 +525,11 @@ public class Library
 		}
 	}
 	
+	/**
+	 * removes a title from the databse using isbn#
+	 * @param isbn unique code for title
+	 * @throws TitleNotFoundException
+	 */
 	public void removeTitle( int isbn ) throws TitleNotFoundException {
 		if( findTitle(isbn) != null ){
 			try {
@@ -359,6 +546,11 @@ public class Library
 		}
 	}
 	
+	/**
+	 * removes a title from the database
+	 * @param title to remove
+	 * @throws TitleNotFoundException
+	 */
 	public void removeTitle( Title title ) throws TitleNotFoundException {
 		removeTitle(title.getISBN());
 	}
@@ -441,6 +633,32 @@ public class Library
 					+ fName+" "+lName+"'. Please ensure this first-last name combination is unique.");
 		}
 		return user;
+	}
+	
+	/**
+	 * get all users in database
+	 * @return new ArrayList of Users
+	 */
+	public ArrayList<User> getAllUsers(){
+		ArrayList<User> users = new ArrayList<User>();
+		try {
+			Statement stmnt = db.createStatement();
+			String sql = "select * from users;";
+			ResultSet rs = stmnt.executeQuery(sql);
+			while( rs.next() ){
+				int uID = rs.getInt("uID");
+				String fName = rs.getString("fName");
+				String lName = rs.getString("lName");
+				users.add(new User(fName,lName, uID));
+			}
+			rs.close();
+			stmnt.close();
+			db.commit();
+		} catch( SQLException e ){
+			e.printStackTrace();
+			return null;
+		}
+		return users;
 	}
 	
 	/**
@@ -584,43 +802,11 @@ public class Library
 		removeUser(user.getUserID());
 	}
 	
-	/**
-	 * For Debugging purposes, 
-	 * this will erase and recreate the entire database.
-	 */
-	public void clearDB(){
+	public void createTables(){
 		try {
-			// drop users
-			Statement stmnt = db.createStatement();
-			String sql = "drop table if exists users;";
-			stmnt.executeUpdate(sql);
-			stmnt.close();
-			db.commit();
-			
-			// drop librarians
-			stmnt = db.createStatement();
-			sql = "drop table if exists librarians;";
-			stmnt.executeUpdate(sql);
-			stmnt.close();
-			db.commit();
-			
-			// drop items
-			stmnt = db.createStatement();
-			sql = "drop table if exists items;";
-			stmnt.executeUpdate(sql);
-			stmnt.close();
-			db.commit();
-			
-			// drop titles
-			stmnt = db.createStatement();
-			sql = "drop table if exists titles;";
-			stmnt.executeUpdate(sql);
-			stmnt.close();
-			db.commit();
-			
 			// create user table
-			stmnt = db.createStatement();
-			sql = "create table if not exists users("
+			Statement stmnt = db.createStatement();
+			String sql = "create table if not exists users("
 					+ "uID integer primary key autoincrement,"
 					+ "fName text not null,"
 					+ "lName text not null,"
@@ -670,15 +856,63 @@ public class Library
 			sql = "create table if not exists loans("
 					+ "iID integer primary key,"
 					+ "uID integer not null,"
-					+ "startData data not null,"
-					+ "dueDate data not null,"
+					+ "startDate text not null,"
+					+ "dueDate text not null,"
+					+ "unique(iID,uID),"
 					+ "foreign key(iID) references items(iID),"
 					+ "foreign key(uID) references users(uID));";
+			stmnt.executeUpdate(sql);
+			stmnt.close();
+			db.commit();	
+		} catch( SQLException e ){
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * For Debugging purposes, 
+	 * this will erase and recreate the entire database.
+	 */
+	public void clearDB(){
+		try {
+			// drop users
+			Statement stmnt = db.createStatement();
+			String sql = "drop table if exists users;";
+			stmnt.executeUpdate(sql);
+			stmnt.close();
+			db.commit();
+			
+			// drop librarians
+			stmnt = db.createStatement();
+			sql = "drop table if exists librarians;";
+			stmnt.executeUpdate(sql);
+			stmnt.close();
+			db.commit();
+			
+			// drop items
+			stmnt = db.createStatement();
+			sql = "drop table if exists items;";
+			stmnt.executeUpdate(sql);
+			stmnt.close();
+			db.commit();
+			
+			// drop titles
+			stmnt = db.createStatement();
+			sql = "drop table if exists titles;";
+			stmnt.executeUpdate(sql);
+			stmnt.close();
+			db.commit();
+			
+			// drop loans
+			stmnt = db.createStatement();
+			sql = "drop table if exists loans;";
 			stmnt.executeUpdate(sql);
 			stmnt.close();
 			db.commit();
 		} catch( Exception e ){
 			e.printStackTrace();
 		}
+		
+		createTables();
 	}
 }

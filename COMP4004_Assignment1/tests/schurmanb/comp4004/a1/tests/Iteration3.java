@@ -2,13 +2,20 @@ package schurmanb.comp4004.a1.tests;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+
+import org.joda.time.LocalDate;
+import org.junit.After;
 import org.junit.Test;
 
 import schurmanb.comp4004.a1.src.AddTitleException;
 import schurmanb.comp4004.a1.src.AddUserException;
+import schurmanb.comp4004.a1.src.CannotLoanException;
 import schurmanb.comp4004.a1.src.Item;
+import schurmanb.comp4004.a1.src.ItemNotFoundException;
 import schurmanb.comp4004.a1.src.Librarian;
 import schurmanb.comp4004.a1.src.Library;
+import schurmanb.comp4004.a1.src.Loan;
 import schurmanb.comp4004.a1.src.Title;
 import schurmanb.comp4004.a1.src.TitleNotFoundException;
 import schurmanb.comp4004.a1.src.User;
@@ -18,11 +25,12 @@ public class Iteration3
 {
 	Library library = Library.getInstance();
 	
-	/**
-	 * Tests for uses cases "Borrow Loancopy"
+	/** 
+	 * Tests for uses cases "Borrow Loancopy", "Return Loancopy",
+	 * "Collect Fine", "Renew Loan", and "Monitor System"
 	 * from Appendix B of TOTEM paper
 	 */
-	@Test
+	@After
 	public void testLoans(){
 		System.out.println("-------------------------------");
 		
@@ -84,14 +92,100 @@ public class Iteration3
 			fail();
 		}
 		
+		Loan l1 = null;
 		// test borrowLoancopy
 		try {
-			boolean b = library.borrowLoancopy(i2, u1);
-			assert(b == true);
+			// generate a couple loans
+			LocalDate dueDate = new LocalDate().plusDays(7);
+			l1 = library.borrowLoancopy(i2, u1, dueDate);
+			assert(l1 != null);
+			System.out.println("[Loan Generated] "+l1);
+			
+			dueDate = new LocalDate().plusDays(14);
+			l1 = library.borrowLoancopy(i3, u1, dueDate);
+			assert(l1 != null);
+			System.out.println("[Loan Generated] "+l1);
+			
+			// test getAllLoans() for a user
+			System.out.println("printing all loans for user "+u1+" using library.getAllLoans()");
+			ArrayList<Loan> loans = library.getAllLoans(u1);
+			for( Loan lo : loans ){
+				System.out.println(lo);
+			}
+		} catch( TitleNotFoundException e ){
+			e.printStackTrace();
+			fail();
+		} catch( CannotLoanException e ){
+			e.printStackTrace();
+			fail();
+		}
+		
+		// test loaning the same item twice
+		try {
+			library.borrowLoancopy(i3, u1, new LocalDate().plusDays(14));
+		} catch( CannotLoanException e ){
+			// this exception should be thrown here.
+			System.err.println(e);
+		} catch (TitleNotFoundException e) {
+			// but not this one!
+			e.printStackTrace();
+			fail();
+		}
+		
+		// test borrowing when an Item is overdue
+		try {
+			Loan l = library.borrowLoancopy(i1[9], u1, new LocalDate().minusDays(1));
+			System.out.println("[Loan Generated] "+l);
+			library.borrowLoancopy(i1[8], u1, new LocalDate().plusDays(3));
+		} catch( CannotLoanException e ){
+			System.err.println(e);
 		} catch( TitleNotFoundException e ){
 			e.printStackTrace();
 			fail();
 		}
+		
+		// test collectFine on the overdue item from above
+		try { 
+		 	library.collectFine(u1,i1[9]);
+		 	System.out.println("[Fine Collected!]");
+		} catch( TitleNotFoundException | ItemNotFoundException e ){
+			e.printStackTrace();
+			fail();
+		}
+		
+		// test loaning over 10 items
+		try {
+			// should see some exceptions here
+			for( int i=0 ;i<10; i++ ){
+				Loan loan = library.borrowLoancopy(i1[i], u1, new LocalDate().plusDays(7));
+				System.out.println("[Loan Generated] "+loan);
+			}
+		} catch( CannotLoanException e ){
+			System.err.println(e);
+		} catch( TitleNotFoundException e ){
+			e.printStackTrace();
+			fail();
+		}
+		
+		// return some copies
+		try {
+			for( int i=0 ;i<5; i++ ){
+				library.returnLoancopy(u1, i1[i]);
+				System.out.println("[Loaned Item Returned] "+i1[i]);
+			}
+		} catch( TitleNotFoundException | ItemNotFoundException e ){
+			e.printStackTrace();
+			fail();
+		}
+		
+		// renew a loan
+		System.out.println("[Loan before renewal] "+l1);
+		l1 = library.renewLoan(l1, u1, 21);
+		System.out.println("[Loan after renewal] "+l1);
+		
+		// lastly test Monitor System use case
+		System.out.println(library.getAllUsers());
+		System.out.println(library.getAllTitles());
 		
 		System.out.println("-------------------------------");
 	}
@@ -157,9 +251,9 @@ public class Iteration3
 		
 		// test finding an arbitrary Item copy of a Title
 		try {
-			Item i4 = library.findItem(t1.getISBN());
+			Item i4 = library.findSomeItem(t1.getISBN());
 			System.out.println("[Item found] "+i4);
-		} catch( TitleNotFoundException e ){
+		} catch( ItemNotFoundException e ){
 			e.printStackTrace();
 			fail();
 		}
@@ -223,7 +317,7 @@ public class Iteration3
 		
 		// add the same title twice to generate an exception
 		try {
-			Title t4 = library.addTitle("Moby Dick", "Hermen Melville", 1443392, l1.getUserID());
+			library.addTitle("Moby Dick", "Hermen Melville", 1443392, l1.getUserID());
 		} catch( AddTitleException e ){
 			System.err.println(e);
 		}

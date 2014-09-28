@@ -7,6 +7,7 @@ import org.junit.Test;
 import schurmanb.comp4004.a1.src.AddTitleException;
 import schurmanb.comp4004.a1.src.AddUserException;
 import schurmanb.comp4004.a1.src.Item;
+import schurmanb.comp4004.a1.src.ItemNotFoundException;
 import schurmanb.comp4004.a1.src.Librarian;
 import schurmanb.comp4004.a1.src.Library;
 import schurmanb.comp4004.a1.src.Title;
@@ -79,9 +80,9 @@ public class Iteration2
 		
 		// test finding an arbitrary Item copy of a Title
 		try {
-			Item i4 = library.findItem(t1.getISBN());
+			Item i4 = library.findSomeItem(t1.getISBN());
 			System.out.println("[Item found] "+i4);
-		} catch( TitleNotFoundException e ){
+		} catch( ItemNotFoundException e ){
 			e.printStackTrace();
 			fail();
 		}
@@ -145,7 +146,7 @@ public class Iteration2
 		
 		// add the same title twice to generate an exception
 		try {
-			Title t4 = library.addTitle("Moby Dick", "Hermen Melville", 1443392, l1.getUserID());
+			library.addTitle("Moby Dick", "Hermen Melville", 1443392, l1.getUserID());
 		} catch( AddTitleException e ){
 			System.err.println(e);
 		}
