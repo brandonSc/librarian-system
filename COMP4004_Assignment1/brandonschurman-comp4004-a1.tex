@@ -1,0 +1,34 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage}
+
+% changes font to courier for code snippets
+\newenvironment{code}{ 
+    \ttfamily
+}{\vspace{5mm}}
+\begin{document}
+
+\title{COMP4004 -- Assignment 1}
+\author{Brandon Schurman, 100857068}
+\maketitle
+\vspace{5mm}
+URL to SVN repository: \begin{code}https://riouxsvn.com/svn/comp4004a1bms\end{code}
+\vspace{10mm} \\
+Email: \begin{code}brandonschurman@cmail.carleton.ca\end{code}
+\vspace{10mm} \\
+Option 1: The Iterations are organized by commits to SVN as well as in 4 different test files located in the tests folder. These files are named \begin{code}Iteration1.java, ..., Iteration4.java\end{code}
+\vspace{5mm} \\
+Use Cases Per Iteration:
+\begin{itemize}
+    \item[1.] "Add User", "Remove User" and "Find User" Use cases
+    \item[2.] "Add Title", "Remove Title", "Add Item", "Remove Item"
+    \item[3.] "Borrow Loancopy", "Return Loancopy", "Renew Loan", "Collect Fine", "Monitor System"
+    \item[4.] Added GUI
+\end{itemize}
+
+\vspace{10mm}
+Some notes on running the project: \\
+This projcet contains many dependencies, you will probably have to re-add all of the external .jars. They are all located within the project's root directory. To do so, right click the projcet and go $\rightarrow$ build path $\rightarrow$ configure build path $\rightarrow$ libariers $\rightarrow$ add external jars $\rightarrow$ then browse to the root folder and all of .jar files. You might have to remove any broken .jar files from the libraries tab. \\
+You must also be using the latest Java 8u20 for some features in the UI to work, as well as have JavaFX installed in eclipse. If you do not already have JavaFX, install it from here: \begin{code}http://www.eclipse.org/efxclipse/install.html\#for-the-lazy\end{code}. 
+Also note that this project has only been tested in the latest Mac OS X, and Ubuntu platforms, please contact me if there are any issues running on windows or in general as everything works on my setup and I could demonstrate this on my laptop.
+
+\end{document}

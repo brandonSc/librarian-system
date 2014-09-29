@@ -2,9 +2,13 @@
 <classpath>
 	<classpathentry excluding="tests/" kind="src" path="src"/>
 	<classpathentry kind="src" path="tests"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="src" path="gui"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="/Users/schurman93/Dropbox/School/COMP4004/workspace/COMP4004_Assignment1/sqlite-jdbc-3.8.5-pre1.jar"/>
-	<classpathentry kind="lib" path="/Users/schurman93/Dropbox/School/COMP4004/workspace/COMP4004_Assignment1/joda-time-2.4.jar"/>
+	<classpathentry kind="lib" path="controlsfx-8.0.6_20.jar"/>
+	<classpathentry kind="lib" path="controlsfx-samples-8.0.6_20.jar"/>
+	<classpathentry kind="lib" path="fxsampler-1.0.6_20.jar"/>
+	<classpathentry kind="lib" path="joda-time-2.4.jar"/>
+	<classpathentry kind="lib" path="sqlite-jdbc-3.8.5-pre1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

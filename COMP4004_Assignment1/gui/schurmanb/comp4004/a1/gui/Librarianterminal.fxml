@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane fx:id="bp" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="746.0" prefWidth="1242.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="schurmanb.comp4004.a1.gui.LibrarianterminalController">
+   <right>
+      <VBox id="ButtonVBox" prefHeight="554.0" prefWidth="171.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label text="User" />
+            <Button fx:id="borrowLoancopyButton" defaultButton="true" onAction="#borrowLoancopyButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Borrow Loancopy"> 
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </Button>
+            <Button fx:id="returnLoancopyButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#returnLoancopyButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Return Loancopy">
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </Button>
+            <Button fx:id="renewLoanButton" mnemonicParsing="false" onAction="#renewLoanButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Renew Loan">
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </Button>
+            <Button fx:id="collectFinesButton" mnemonicParsing="false" onAction="#collectFinesButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Pay Fines">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="15.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Separator prefWidth="200.0" />
+            <Label text="Librarian">
+               <padding>
+                  <Insets top="10.0" />
+               </padding>
+            </Label>
+            <Button fx:id="addTitleButton" mnemonicParsing="false" onAction="#addTitleButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Add Title">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="removeTitleButton" mnemonicParsing="false" onAction="#removeTitleButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Remove Title">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="addItemButton" mnemonicParsing="false" onAction="#addItemButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Add Item">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="removeItemButton" mnemonicParsing="false" onAction="#removeItemButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Remove Item">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="addUserButton" mnemonicParsing="false" onAction="#addUserButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Add User">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="removeUserButton" mnemonicParsing="false" onAction="#removeUserButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Remove User">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="addLibrarianButton" mnemonicParsing="false" onAction="#addLibrarianButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Add Librarian">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="removeLibrarianButton" mnemonicParsing="false" onAction="#removeLibrarianButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Remove Librarian">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="monitorSystemButton" mnemonicParsing="false" onAction="#monitorSystemButtonPressed" prefHeight="30.0" prefWidth="140.0" text="Monitor System">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+               <VBox.margin>
+                  <Insets bottom="10.0" top="10.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+         <opaqueInsets>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </opaqueInsets>
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
+         <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </padding>
+      </VBox>
+   </right>
+   <center>
+      <VBox>
+         <children>
+            <Label text="Available Titles">
+               <font>
+                  <Font size="16.0" />
+               </font>
+               <VBox.margin>
+                  <Insets bottom="5.0" left="10.0" right="10.0" top="15.0" />
+               </VBox.margin>
+            </Label>
+            <TableView fx:id="titlesTable" prefHeight="741.0" prefWidth="1062.0" BorderPane.alignment="CENTER">
+              <columns>
+                <TableColumn fx:id="titlesCol" prefWidth="559.0" text="Title" />
+                <TableColumn fx:id="authorsCol" prefWidth="364.0" text="Author" />
+                  <TableColumn fx:id="isbnsCol" prefWidth="138.0" text="isbn" />
+              </columns>
+            </TableView>
+         </children>
+      </VBox>
+   </center>
+</BorderPane>
