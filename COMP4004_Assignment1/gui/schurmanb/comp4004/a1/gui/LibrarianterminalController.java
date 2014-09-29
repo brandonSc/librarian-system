@@ -187,7 +187,7 @@ public class LibrarianterminalController extends Application implements Initiali
 	 }
 	
 	 	/*
-		 * ADD USER
+		 * ADD LIBRARIAN
 		 */
 		@FXML private void addLibrarianButtonPressed( ActionEvent ae ){
 			// prompt Librarian for iD 
@@ -250,12 +250,12 @@ public class LibrarianterminalController extends Application implements Initiali
 		     dlg.setIconifiable(false);
 		     dlg.setGraphic(new ImageView(HelloValidation.class.getResource("apertureLogo.png").toString()));
 		     dlg.setContent(content);
-		     dlg.getActions().addAll(actionAddUser, Dialog.Actions.CANCEL);
+		     dlg.getActions().addAll(actionAddLibrarian, Dialog.Actions.CANCEL);
 		     validateAddUser();
 		       
 		     Platform.runLater(new Runnable() {
 		         public void run() {
-		             fNameTxt.requestFocus();
+		             libfNameTxt.requestFocus();
 		         }
 		     });
 
