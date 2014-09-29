@@ -593,7 +593,7 @@ public class LibrarianterminalController extends Application implements Initiali
 	        	    if( s.equals("7 days") ) days = 7;
 	        	    else if( s.equals("14 days") ) days = 14;
 	        	    else if( s.equals("28 days") ) days = 28;
-	        	    else if( s.equals("-1 (for debugging)") ) days = 1;
+	        	    else if( s.equals("-1 (for debugging)") ) days = -1;
 	        	    Loan l = null;
 	        	    try {
 	        	    	library = Library.getInstance();
@@ -601,7 +601,7 @@ public class LibrarianterminalController extends Application implements Initiali
 	        	    	if( days > 0 ){
 	        	    		l = library.borrowLoancopy(item, user, new LocalDate().plusDays(days));
 	        	    	} else {
-	        	    		l = library.borrowLoancopy(item, user, new LocalDate().minusDays(days));
+	        	    		l = library.borrowLoancopy(item, user, new LocalDate().minusDays(-1*days));
 	        	    	}
 	        	    } catch( Exception e ){
 						Dialogs.create()
@@ -1091,7 +1091,7 @@ public class LibrarianterminalController extends Application implements Initiali
 			     dlg.setIconifiable(false);
 			     dlg.setGraphic(new ImageView(HelloValidation.class.getResource("apertureLogo.png").toString()));
 			     dlg.setContent(content);
-			     dlg.getActions().addAll(actionAddUser, Dialog.Actions.CANCEL);
+			     dlg.getActions().addAll(actionRemUser, Dialog.Actions.CANCEL);
 			     validateRemoveUser();
 			       
 			     Platform.runLater(new Runnable() {
